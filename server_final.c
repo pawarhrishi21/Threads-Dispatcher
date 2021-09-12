@@ -1,7 +1,11 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
+#include <unistd.h> // for read(), write()
+#include <string.h> // for bzero()
+
 
 void error(char *msg)
 {
@@ -57,21 +61,22 @@ int main(int argc,char *argv[])
 
     if(newsockfd<0)
         error("ERROR executing accept()");
+    while(1)
+    {
+        bzero(buffer,256);
 
-    bzero(buffer,256);
+        n = read(newsockfd,buffer,255); //Reads from client write() into buffer, returns no of characters read
+        if(n<0)
+            error("ERROR could not read() in the socket");
+        printf("Message Recieved: %s\n", buffer);
 
-    n = read(newsockfd,buffer,255); //Reads from client write() into buffer, returns no of characters read
-    if(n<0)
-        error("ERROR could not read() in the socket");
-    printf("Message Recieved: %s\n", buffer);
-
-    n = write(newsockfd,"Recieved the message. Thanks!",29); // Writing to client
-     if(n<0)
-        error("ERROR could not write() from the socket");   
+        n = write(newsockfd,"Recieved the message. Thanks!",29); // Writing to client
+        if(n<0)
+            error("ERROR could not write() from the socket");   
+    }
 
 
     return 0;
-
 }
 
 
