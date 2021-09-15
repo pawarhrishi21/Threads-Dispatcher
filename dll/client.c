@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
 
     printf("Data sent to Server\n");
 
+    bzero(buffer,1000);
     n = read(sockfd,buffer,1000);
 
     if(n<0)

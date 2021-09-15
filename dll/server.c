@@ -28,10 +28,8 @@ void error(char *msg)
     exit(1);
 }
 
-// Temporary function for testing
 void *func(void *arg)
 {
-
     struct thread_arguments args = *(struct thread_arguments*)arg;
     json_object *parsed_json = args.jsonData;
         /*Creating a json string*/
@@ -39,33 +37,53 @@ void *func(void *arg)
     json_object *jvalue;
     json_object *jdll;
     int *threadstatus = args.status;
-    printf("args.status is %d",*args.status);
+    
     json_object_object_get_ex(parsed_json,"FunctionName", &jfunction);
     json_object_object_get_ex(parsed_json,"FunctionInput", &jvalue);
     json_object_object_get_ex(parsed_json,"DLLName", &jdll);
 
-    char *message = "Executed the function. The answer is ";
+    char message[100] = "The answer is ";
     const char *functionname = json_object_get_string(jfunction);
     const char *value = json_object_get_string(jvalue);
     const char *dll = json_object_get_string(jdll);
     double val = atof(value);
+    val = 1.0;
     void *handle;
-    if(dll == "math")
+    const char *math_dll = dll;
+    double (*dll_func)(double);
+    char *err;
+
+    if(strcmp(dll,"math") == 0)
     {
         handle = dlopen ("/lib/x86_64-linux-gnu/libm.so.6", RTLD_LAZY);
         if (!handle)
-            printf("Could not open the DLL math");
+        {
+            perror("Could not open the DLL math");
+        }
+        dll_func = dlsym(handle,functionname);
+        if ((err = dlerror()) != NULL)  {
+            fputs(err, stderr);
+            strcpy(message,err);
+            write(args.socketfd,message,strlen(message));
+            *args.status = 1;
+             pthread_exit(NULL);
+        }
 
-        double (*dll_func)(double) = dlsym(handle,functionname);
+        double answer = (*dll_func)(val); // TODO fix seg fault here
 
-        double answer = (*dll_func)(val);
-        char* answermessage;
-        ftoa(answer, answermessage, 3); // converts answer to string and saves in answermessage;
+        char answermessage[100];
+        sprintf(answermessage,"%f", answer); // converts answer to string and saves in answermessage;
+
         strcat(message,answermessage);
+
         dlclose(handle);
     }
-    // printf("AAA %s %s %s", functionname,value,dll);
-    // printf("Function executed in thread %ld for socket %d\n",pthread_self(),args.socketfd);
+    else
+    {
+        strcpy(message,"DLL was not found / is not supported. Only 'math' is supported");
+    }
+
+    printf("Function executed in thread %ld for socket %d\n",pthread_self(),args.socketfd);
     int n = write(args.socketfd,message,strlen(message));
 
     if(n<0)
@@ -143,7 +161,7 @@ int main(int argc,char *argv[])
 
         if (read(newsockfd, buffer, 1000) == -1)
             error("ERROR executing read() in server");
-        printf("Data Received: %s\n", buffer);
+        // printf("Data Received: %s\n", buffer);
 
         json_object *parsed_json;
 
@@ -156,22 +174,22 @@ int main(int argc,char *argv[])
   
         for(int i=0;i<maxthreads;i++)
         {
-            printf("i=%d ",i);
+            // printf("i=%d ",i);
             if(threadstatus[i] >= 0) // Thread is dead or no thread was created earlier
             {
-                printf("Creating thread at i=%d with threadstatus=%d\n",i,threadstatus[i]);
+                // printf("Creating thread at i=%d with threadstatus=%d\n",i,threadstatus[i]);
                 
                 threadstatus[i] = -1;
                 args.status = &threadstatus[i];
                 
                 pthread_create(&threadpool[i],NULL,func,&args);
-                printf("Created thread\n");
+                // printf("Created thread\n");
                 break;
             }
             else if(i==maxthreads - 1)
                 i=-1;
         }
-        printf("Out of the loop\n");
+        // printf("Out of the loop\n");
     }
  
     close(sockfd);
