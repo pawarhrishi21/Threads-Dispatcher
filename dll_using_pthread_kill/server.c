@@ -11,15 +11,10 @@
 #include <json-c/json.h>
 #include <dlfcn.h>
 #include <errno.h>
-#include <signal.h> // For pthread_kill()
-#include <dlfcn.h> // For DLL
-
-
+#include <signal.h>
 struct thread_arguments{
     json_object* jsonData;
     int socketfd;
-    int retval;
-    int* status;
 };
 
 void error(char *msg)
@@ -38,42 +33,23 @@ void *func(void *arg)
     json_object *jfunction;
     json_object *jvalue;
     json_object *jdll;
-    int *threadstatus = args.status;
-    printf("args.status is %d",*args.status);
+
     json_object_object_get_ex(parsed_json,"FunctionName", &jfunction);
     json_object_object_get_ex(parsed_json,"FunctionInput", &jvalue);
     json_object_object_get_ex(parsed_json,"DLLName", &jdll);
 
-    char *message = "Executed the function. The answer is ";
     const char *functionname = json_object_get_string(jfunction);
     const char *value = json_object_get_string(jvalue);
     const char *dll = json_object_get_string(jdll);
-    double val = atof(value);
-    void *handle;
-    if(dll == "math")
-    {
-        handle = dlopen ("/lib/x86_64-linux-gnu/libm.so.6", RTLD_LAZY);
-        if (!handle)
-            printf("Could not open the DLL math");
 
-        double (*dll_func)(double) = dlsym(handle,functionname);
-
-        double answer = (*dll_func)(val);
-        char* answermessage;
-        ftoa(answer, answermessage, 3); // converts answer to string and saves in answermessage;
-        strcat(message,answermessage);
-        dlclose(handle);
-    }
     // printf("AAA %s %s %s", functionname,value,dll);
     // printf("Function executed in thread %ld for socket %d\n",pthread_self(),args.socketfd);
-    int n = write(args.socketfd,message,strlen(message));
+    int n = write(args.socketfd,"Executed the func. Thanks!",26);
 
     if(n<0)
         error("ERROR could not execute write() in the socket"); 
-    sleep(1);
+    sleep(5000);
 
-    *args.status = 1;
-    pthread_exit(NULL);
 }
 
 
@@ -87,7 +63,7 @@ int main(int argc,char *argv[])
     int n; // no of characters
     int clilen; // length of address of client
 
-    int maxthreads = 5; // Max no of threads allowed to execute concurrently
+    int maxthreads = 5;
 
     char buffer[1000]; // Buffer to store char read from connection
 
@@ -123,16 +99,8 @@ int main(int argc,char *argv[])
     listen(sockfd,5); // Listen for connections (Second argument denotes maximum no of allowed waiting connections in queue for the socket)
     printf("Listening for Connections\n");
     
-
-    pthread_t threadpool[maxthreads]; // Pool of threads
-    int threadstatus[maxthreads]; // Maintains status of each thread => 1 when thread is free, -1 when thread is executing, 0 when no thread has been initialized yet(threadpool[i] is null)
-
-    for(int i=0;i<maxthreads;i++)
-    {
-        threadstatus[i] = 0;
-        threadpool[i] = '\0';
-    }
-
+    pthread_t threadpool[maxhthreads];
+    memset(threadpool, '\0', sizeof(threadpool));
     while(1)
     {
         clilen = sizeof(cli_addr);
@@ -150,28 +118,41 @@ int main(int argc,char *argv[])
         parsed_json = json_tokener_parse(buffer);
         
         struct thread_arguments args;
-
+        
         args.jsonData = parsed_json;
         args.socketfd = newsockfd;
-  
+    
+        int threadstatus = -1;
         for(int i=0;i<maxthreads;i++)
         {
             printf("i=%d ",i);
-            if(threadstatus[i] >= 0) // Thread is dead or no thread was created earlier
+            if(!threadpool[i]) //ESRCH
             {
-                printf("Creating thread at i=%d with threadstatus=%d\n",i,threadstatus[i]);
-                
-                threadstatus[i] = -1;
-                args.status = &threadstatus[i];
-                
+                printf("NO thread present\n");
+                // Thread is dead or no thread was created earlier
                 pthread_create(&threadpool[i],NULL,func,&args);
-                printf("Created thread\n");
+                
                 break;
             }
-            else if(i==maxthreads - 1)
-                i=-1;
+            else //if(pthread_kill(threadpool[i],0) == 3)
+            {
+                int status = pthread_kill(threadpool[i],0);
+                    printf("thread is %d",status);
+             //   pthread_create(&threadpool[i],NULL,func,&args);
+                
+                // break;        
+            }
+            // else 
+            // {
+            //     if(i==maxthreads-1)
+            //         i=0;
+            // }
         }
         printf("Out of the loop\n");
+        // n = write(newsockfd,"Executed the func. Thanks!",26);
+
+        // if(n<0)
+        //     error("ERROR could not execute write() in the socket"); 
     }
  
     close(sockfd);
