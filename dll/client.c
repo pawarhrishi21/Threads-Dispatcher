@@ -29,16 +29,19 @@ int main(int argc, char* argv[])
     }
 
     int sockfd,portno,n;
-    char *func_name;
+    
     struct sockaddr_in serv_addr; //Address of the server to be connected, internet address (defined in netinet/in.h library){sin_family,sin_port,(struct)sin_addr->s_addr,sin_zero}
     struct hostent *server; //Hostent structure defines the host computer on internet {*h_name,**h_aliases_h_addrtype,h_length,**h_addr_list,h_addr = h_addr_list[0]}
 
-    char buffer[256];
+    char buffer[1000];
 
+    char *func_name, *value,*dll_name;  
     portno = atoi(argv[1]);
     server = gethostbyname("localhost"); //Returns pointer to hostent structure
     func_name = argv[2];
-    int value = argv[3];
+    value = argv[3];
+    dll_name = argv[4];
+
     if(server==NULL)
     {
         error("ERROR: Host was not found");
@@ -58,79 +61,41 @@ int main(int argc, char* argv[])
     if(connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0)
         error("ERROR executing connect()");
         
-    bzero(buffer,256);
-    /*Creating a json object*/
+    bzero(buffer,1000);
+    // Creating a json object
     json_object *jobj = json_object_new_object();
     
+    // Json Strings
     json_object *jfunction = json_object_new_string(func_name);
     json_object *jvalue = json_object_new_string(value);
     json_object *jdll = json_object_new_string(dll_name);
-    /*Creating a json string*/
-    json_object *jstring = json_object_new_string("Joys of Programming");
 
-    /*Creating a json integer*/
-    json_object *jint = json_object_new_int(10);
+    // Form the json object as key-val pairs
+    json_object_object_add(jobj,"FunctionName", jfunction);
+    json_object_object_add(jobj,"FunctionInput", jvalue);
+    json_object_object_add(jobj,"DLLName", jdll);
 
-    /*Creating a json boolean*/
-    json_object *jboolean = json_object_new_boolean(1);
-
-    /*Creating a json double*/
-    json_object *jdouble = json_object_new_double(2.14);
-
-    /*Creating a json array*/
-    json_object *jarray = json_object_new_array();
-
-    /*Creating json strings*/
-    json_object *jstring1 = json_object_new_string("c");
-    json_object *jstring2 = json_object_new_string("c++");
-    json_object *jstring3 = json_object_new_string("php");
-
-    /*Adding the above created json strings to the array*/
-    json_object_array_add(jarray,jstring1);
-    json_object_array_add(jarray,jstring2);
-    json_object_array_add(jarray,jstring3);
-
-    /*Form the json object*/
-    /*Each of these is like a key value pair*/
-    json_object_object_add(jobj,"Site Name", jstring);
-    json_object_object_add(jobj,"Technical blog", jboolean);
-    json_object_object_add(jobj,"Average posts per day", jdouble);
-    json_object_object_add(jobj,"Number of posts", jint);
-    json_object_object_add(jobj,"Categories", jarray);
-
-    printf("Size of JSON object- %lu\n", sizeof(jobj));
-    printf("Size of JSON_TO_STRING- %lu,\n %s\n", sizeof(json_object_to_json_string(jobj)), json_object_to_json_string(jobj));
-
-    //printf("Size of string- %lu\n", sizeof(json_object_to_json_string(jobj)));
-    
-    char temp_buff[1000];
-
-    if (strcpy(temp_buff, json_object_to_json_string(jobj)) == NULL)
+    if (strcpy(buffer, json_object_to_json_string(jobj)) == NULL)
     {
-        perror("strcpy");
-        return EXIT_FAILURE;
+        error("ERROR storing data in buffer");
     }
 
-    if (write(sockfd, temp_buff, strlen(temp_buff)) == -1)
+    if (write(sockfd, buffer, strlen(buffer)) == -1)
     {
-        perror("write");
-        return EXIT_FAILURE;
+        error("ERROR executing write() in client");
     }
 
-    printf("Written data\n");
-
-
-    // n = write(sockfd,&msg,255);
-    // if(n<0)
-    //     error("ERROR in write() in client");
-    // printf("Sent to server\n");
+    printf("Data sent to Server\n");
 
     n = read(sockfd,buffer,255);
+
     if(n<0)
-        error("ERROR in read() in client");
-    printf("Message Recieved from server: %s\n",buffer);
+        error("ERROR executing read() in client");
+
+    printf("Message Received from server: %s\n",buffer);
     
     close(sockfd);
+
     return 0;
 
 }
