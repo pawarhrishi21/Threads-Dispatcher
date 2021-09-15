@@ -14,13 +14,6 @@ void error(char *s)
     exit(1);
 }
 
-struct message{
-    int a;
-    char b;
-    char *c;
-};
-struct message msg = {1,'A',"India"};
-
 int main(int argc, char* argv[])
 {
     if(argc < 4)
@@ -87,7 +80,7 @@ int main(int argc, char* argv[])
 
     printf("Data sent to Server\n");
 
-    n = read(sockfd,buffer,255);
+    n = read(sockfd,buffer,1000);
 
     if(n<0)
         error("ERROR executing read() in client");
