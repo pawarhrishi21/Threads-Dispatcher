@@ -28,7 +28,7 @@ int main(int argc,char *argv[])
     struct sockaddr_in serv_addr; // for Server internet address (defined in netinet/in.h library){sin_family,sin_port,(struct)sin_addr->s_addr,sin_zero}
     struct sockaddr_in cli_addr; // for Client internet address
 
-
+    printf("Current Process ID: %d\n",getpid();
     if(argc<2)
     {
         fprintf(stderr,"ERROR: No port provided\n");
