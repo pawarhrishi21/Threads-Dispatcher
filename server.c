@@ -1,3 +1,4 @@
+// Sample execution commands on line 2 and 3
 // $ gcc -o server server.c -lpthread -ljson-c -ldl
 // $ $ ./server 11115 100 3000 12
 

@@ -1,3 +1,4 @@
+// Sample execution commands on line 2 and 3
 // $ gcc -o client client.c -lpthread -ljson-c -ldl
 // $ ./client 11115 cos 1 math
 

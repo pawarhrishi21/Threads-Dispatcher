@@ -1,18 +1,9 @@
-Submitted by: Hrishikesh Pawar
-
-Roll No.: 2018meb1241
-
-Course: CS303 - Operating Systems
-
-======================================================================================================================================================================
-
-
-1. What does this program do?
+|| Thread scheduler/ Dispatcher Simulation with File and Memory Limits ||
 
 The program mimics how process threads are managed by the dispatcher in an Operating Systems. Given the maximum limits on numbers of files open and amount of memory getting used, the server schedules requests from multiple clients for a DLL function invocation using limited no of threads.
 ______________________________________________________________________________________________________________________________________________________________________
 
-2. A description of how this program works (i.e. its logic) and the Design Specifications
+Logic, Description and the Design Specifications
 
 There are two main parts to the program - Server and Client.
 
@@ -33,7 +24,7 @@ Inside the server:
 
 ______________________________________________________________________________________________________________________________________________________________________
 
-3. How to compile and run this program?
+Instructions to compile and run this program.
 
 Prerequisite libraries - libjson-c-dev
 Ensure that the above libraries are installed (Use $ sudo apt install libjson-c-dev) 
@@ -82,7 +73,6 @@ Supported functions for math DLL - (In below list, x is the parameter)
 
 ______________________________________________________________________________________________________________________________________________________________________
 
-4. Provide a snapshot of a sample run.
 
-The snapshots are present in the samples directory.
+Please check sample run snapshots are present in the samples directory.
 
