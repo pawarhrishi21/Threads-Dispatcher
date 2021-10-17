@@ -1,6 +1,6 @@
 || Thread scheduler/ Dispatcher Simulation with File and Memory Limits ||
 
-The program mimics how process threads are managed by the dispatcher in an Operating Systems. Given the maximum limits on numbers of files open and amount of memory getting used, the server schedules requests from multiple clients for a DLL function invocation using limited no of threads.
+The program mimics how process threads are managed by the dispatcher in an Operating System. Given the maximum limits on numbers of files open and amount of memory getting used, the server schedules requests from multiple clients for a DLL function invocation using limited no of threads.
 ______________________________________________________________________________________________________________________________________________________________________
 
 Logic, Description and the Design Specifications
